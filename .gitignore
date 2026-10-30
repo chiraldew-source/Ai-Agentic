@@ -1,0 +1,7 @@
+node_modules/
+.env
+.DS_Store
+# Local simulated case history. Never commit real SOS names or locations.
+data/db.json
+
+data/backup-*.json

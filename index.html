@@ -1,351 +1,162 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>BellaNova | LifeCrisis AI</title>
-
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1120">
+  <title>BellaNova | LifeCrisis AI — Simulation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
+<div class="container">
+  <aside class="sidebar">
+    <div class="logo"><span class="logo-icon">✦</span> BellaNova</div>
+    <p class="menu-title">MAIN MENU</p>
+    <nav aria-label="Main menu">
+      <a href="#dashboard" class="nav-link active" data-page="dashboard">⌂ Dashboard</a>
+      <a href="#sos" class="nav-link" data-page="sos">🚨 SOS Requests</a>
+      <a href="#silentzone" class="nav-link" data-page="silentzone">◉ Equity / SilentZone</a>
+      <a href="#resources" class="nav-link" data-page="resources">▦ Resource Hub</a>
+      <a href="#failureshift" class="nav-link" data-page="failureshift">↗ FailureShift</a>
+      <a href="#proofloop" class="nav-link" data-page="proofloop">✓ ProofLoop</a>
+    </nav>
+    <div class="sidebar-bottom"><p>RULE-BASED DEMO SYSTEM</p><span id="connection-status" role="status">● Checking backend…</span><p>Not an emergency dispatch service.</p></div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div><h1 id="page-title">Emergency Dashboard</h1><p>Human-supervised emergency coordination simulator</p></div>
+      <div class="profile"><div class="avatar">BN</div><div><strong>Team BellaNova</strong><small>Simulation Coordinator</small></div></div>
+    </header>
+    <div class="notice" role="note"><strong>SIMULATION ONLY</strong> — No SOS is sent to real emergency services. Coordinates and outcomes are demo records. Human verification is required.</div>
 
-    <div class="container">
+    <div class="offline-banner" id="offline-banner" role="status">Online sync checking… <strong id="queue-count">0</strong> locally queued SOS. <button class="small-btn" id="retry-sync">Retry sync</button></div>
+    <section class="page active" id="dashboard">
+      <div class="welcome"><div><h2>Welcome to LifeCrisis AI 👋</h2><p>From SOS to explainable resource assignment to verified demo outcome.</p></div><span class="live">● DEMO MONITORING</span></div>
+      <h3>Emergency Overview <small class="muted">(live API counts)</small></h3>
+      <div class="stats-grid">
+        <div class="stat-card"><span>🚨</span><p>Total SOS Requests</p><h2 id="total-sos">—</h2></div>
+        <div class="stat-card"><span>🚑</span><p>Available Rescue Resources</p><h2 id="responder-count">—</h2></div>
+        <div class="stat-card"><span>📦</span><p>Available Resource Units</p><h2 id="resource-count">—</h2></div>
+        <div class="stat-card"><span>✓</span><p>Demo Confirmed Requests</p><h2 id="resolved">—</h2></div>
+      </div>
+      <div class="map-panel panel">
+        <div class="map-heading"><div><h3>🗺️ SOS Coordinates Map</h3><p>Only requests with submitted GPS coordinates appear as markers.</p></div><span class="map-status">OPENSTREETMAP • ONLINE TILES</span></div>
+        <div id="emergency-map" role="region" aria-label="Map of SOS requests with known coordinates"></div>
+        <p id="map-info" class="muted">Map loading…</p>
+        <div class="map-legend"><span><i class="dot red"></i> Unresolved SOS</span><span><i class="dot green"></i> Demo confirmed</span></div>
+      </div>
+      <div class="hurdle-banner"><div><strong>⚖️ THE 60% CHALLENGE</strong><p>Does speed-first relief leave the distant villages behind?</p></div><button data-open="fairshare" class="primary-btn">Compare fair vs fast →</button></div>
+      <div class="content-grid">
+        <div class="panel"><h3>Quick Actions</h3><button class="action-btn" data-open="sos">🚨 Submit a fictional SOS</button><button class="action-btn" data-open="resources">📦 View current resources</button><button class="action-btn" data-open="failureshift">↗ Test rescue boat failure</button></div>
+        <div class="panel"><h3>System Status</h3><div class="status-row"><span>Backend</span><span id="backend-health" class="yellow">Checking…</span></div><div class="status-row"><span>Decision engine</span><span class="green">Rule-based simulation</span></div><div class="status-row"><span>Assignment approvals</span><span class="green">Human required</span></div><div class="status-row"><span>Route safety</span><span class="yellow">Not verified</span></div></div>
+      </div>
+      <div class="panel"><h3>Recent Emergency Requests</h3><div id="recent-requests"><p class="empty">Loading SOS requests…</p></div></div>
+      <div class="panel"><h3>Accountability Event History</h3><div id="event-history" class="list-scroll"><p class="empty">Loading events…</p></div></div>
+    </section>
 
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
+    <section class="page" id="sos">
+      <div class="panel">
+        <h2>Create a Fictional Emergency SOS</h2><p>Submits the request to the backend; no emergency agency is contacted.</p>
+        <form id="sos-form">
+          <label for="person-name">Full name (fictional)</label><input id="person-name" maxlength="120" required placeholder="Demo Person">
+          <label for="emergency-type">Emergency type</label><select id="emergency-type" required><option value="">Select emergency</option><option>Medical Emergency</option><option>Food and Water</option><option>Natural Disaster</option><option>Rescue Assistance</option><option>Other</option></select>
+          <label for="location">Emergency location</label><div class="location-box"><input id="location" required maxlength="200" placeholder="Demo location or GPS coordinates"><button type="button" id="gps-btn" class="secondary-btn">📍 Use GPS</button></div><p id="gps-status" class="muted">GPS is optional; the browser will ask for permission.</p>
+          <label for="camp">Registration camp (optional)</label><input id="camp" maxlength="120" placeholder="Camp East">
+          <label for="family-size">Household size (optional)</label><input id="family-size" type="number" min="1" max="100" placeholder="4">
+          <label for="landmark">Nearby landmark (optional)</label><input id="landmark" maxlength="120" placeholder="Oak Bridge">
+          <label for="description">Emergency description</label><textarea id="description" maxlength="500" required placeholder="Describe this fictional emergency case"></textarea>
+          <button type="submit" class="primary-btn" id="sos-submit">Submit Simulated SOS</button>
+        </form><p id="form-message" role="status" class="result"></p>
+      </div>
+      <div class="panel"><h3>Request & NeedGraph Queue</h3><p>Choose an OPEN request, inspect suitable resources, and propose an assignment. The coordinator must approve it separately.</p><div id="sos-list" class="list-scroll"></div><div id="needgraph-result" class="result" role="status"></div></div>
+      <div class="panel"><h3>Coordinator Approval Queue</h3><label for="coordinator-name">Coordinator name</label><input id="coordinator-name" value="Demo Coordinator" maxlength="100"><div id="approval-queue" class="list-scroll"></div></div>
+    </section>
 
-            <div class="logo">
-                <span class="logo-icon">✦</span>
-                BellaNova
-            </div>
+    <section class="page" id="silentzone">
+      <div class="panel"><h2>◉ Equity Lens / SilentZone</h2><p>Shows locations with unresolved SOS requests. This does <strong>not</strong> detect actual network outages or measure clinical vulnerability.</p><button class="primary-btn" id="scan-btn">Refresh Coverage Gap Proxy</button><div id="scan-result" class="result" role="status"></div></div>
+    </section>
 
-            <p class="menu-title">MAIN MENU</p>
+    <section class="page" id="resources"><div class="panel"><h2>📦 Resource Hub</h2><p>Resource inventory from the backend (no hardcoded stock figures).</p><div id="resource-grid" class="resource-grid"></div></div></section>
 
-            <nav>
-                <a href="#" class="nav-link active" data-page="dashboard">⌂ Dashboard</a>
-                <a href="#" class="nav-link" data-page="sos">🚨 SOS Requests</a>
-                <a href="#" class="nav-link" data-page="silentzone">◉ SilentZone</a>
-                <a href="#" class="nav-link" data-page="resources">▦ Resource Hub</a>
-                <a href="#" class="nav-link" data-page="failureshift">↗ FailureShift</a>
-                <a href="#" class="nav-link" data-page="proofloop">✓ ProofLoop</a>
-            </nav>
+    <section class="page" id="failureshift">
+      <div class="panel"><h2>↗ FailureShift</h2><p>Simulate a failure on an approved assignment; the backend records it and may propose a backup requiring human approval.</p>
+        <label for="failure-assignment">Approved assignment to fail</label><select id="failure-assignment"></select>
+        <label for="failure-reason">Simulated failure reason</label><select id="failure-reason"><option value="ENGINE_BREAKDOWN">Engine breakdown</option><option value="FUEL_SHORTAGE">Fuel shortage</option><option value="ROUTE_BLOCKED">Route blocked</option><option value="COMMUNICATION_FAILURE">Communication failure</option><option value="OTHER_SIMULATED_FAILURE">Other simulated failure</option></select>
+        <button class="primary-btn" id="alternative-btn">Simulate Failure & Find Backup</button><div id="alternative-result" class="result" role="status"></div>
+      </div><div class="panel"><h3>Failure investigation & human review</h3><label for="analysis-request">SOS case</label><select id="analysis-request"></select><button class="secondary-btn" id="analysis-btn">View Failure Report</button><div id="failure-history" class="result"></div><p class="muted">A matching resource is not proof that a route is safe or that a responder can reach a site.</p></div>
+    </section>
 
-            <div class="sidebar-bottom">
-                <p>AI EMERGENCY SYSTEM</p>
-                <span>● System Online</span>
-            </div>
+    <section class="page" id="proofloop">
+      <div class="panel"><h2>✓ ProofLoop</h2><p>Delivery reporting and separate human confirmation. An assignment alone never counts as a resolved SOS.</p>
+        <label for="proof-assignment">Approved assignment</label><select id="proof-assignment"></select>
+        <label for="reporter-name">Reporter name</label><input id="reporter-name" maxlength="100" value="Demo Responder">
+        <label for="proof-note">Delivery report note (simulation)</label><textarea id="proof-note" maxlength="500">Simulated assistance delivered; awaiting coordinator verification.</textarea>
+        <button class="primary-btn" id="proof-btn">Report Simulated Delivery</button><div id="proof-result" class="result" role="status"></div>
+      </div>
+      <div class="panel"><h3>Pending Coordinator Verification</h3><p>Use the coordinator name entered on the SOS page. This is a demo attestation, not independent evidence of a real rescue.</p><div id="proof-queue" class="list-scroll"></div></div>
+    </section>
+    <!-- SURPRISE HURDLE COMMAND CENTRE -->
+    <section class="page" id="fairshare">
+      <div class="panel hero-hurdle">
+        <div class="hurdle-head"><div><p class="eyebrow">HACKATHON HURDLE 09 · FAIR SHARES & DOUBLE CLAIMS</p>
+          <h2>FairShare Lab <span class="mini-pill">SIMULATION</span></h2><p>One scarce supply. Two allocation policies. Every consequence explained.</p></div>
+          <button class="secondary-btn" id="fair-refresh">↻ Recalculate both plans</button></div>
+        <div class="metric-ribbon">
+          <div><span>Food SOS awaiting supply</span><strong id="fair-demand">—</strong></div>
+          <div><span>Food packs remaining</span><strong id="fair-stock">—</strong></div>
+          <div><span>Supply / need</span><strong id="fair-percent">—</strong></div>
+          <div><span>Possible duplicate reviews</span><strong id="fair-dups">—</strong></div>
+        </div><p class="muted" id="fair-warning">Loading comparison…</p>
+      </div>
+      <div class="comparison-grid">
+        <div class="panel"><span class="eyebrow">POLICY A</span><h3>⚡ Speed-first</h3><p>Nearest compatible requests first, with urgent need considered.</p>
+          <div id="speed-metrics" class="policy-metrics"></div><div id="speed-bars" class="allocation-bars"></div>
+          <button class="secondary-btn" id="approve-speed">Coordinator approve speed-first</button></div>
+        <div class="panel fair-panel"><span class="eyebrow">POLICY B</span><h3>⚖️ Fairness-aware</h3><p>Protect urgent requests, then reduce village coverage gaps.</p>
+          <div id="fair-metrics" class="policy-metrics"></div><div id="fair-bars" class="allocation-bars"></div>
+          <button class="primary-btn" id="approve-fair">Coordinator approve FairShare</button></div>
+      </div>
+      <div class="panel"><h3>Trade-off: What does fairness cost?</h3><div id="fair-tradeoff" class="highlight-line">—</div>
+        <p class="muted">Distance is a synthetic one-way effort proxy, not travel time, real routing or verified accessibility. No plan changes inventory until a coordinator approves it.</p>
+        <label for="fair-reason">Coordinator's reason for approval</label>
+        <input id="fair-reason" value="Demonstration: reviewed coverage and scarcity trade-off" maxlength="500">
+        <p id="fair-result" class="result" role="status"></p></div>
+    </section>
 
-        </aside>
+    <section class="page" id="duplicates">
+      <div class="panel"><span class="eyebrow">ACCOUNTABILITY AGENT</span><h2>👥 DuplicateShield</h2>
+        <p>Compare potentially repeated camp registrations. Similar names are NOT proof of identity and never automatically deny relief.</p>
+        <div id="duplicates-list" class="list-scroll">Loading candidate pairs…</div>
+        <p id="duplicates-result" class="result" role="status"></p></div>
+    </section>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
+    <section class="page" id="claims">
+      <div class="panel"><span class="eyebrow">ACCOUNTABILITY AGENT</span><h2>🔎 ClaimIntegrity</h2>
+        <p>Investigate unusually high village claims. Registrations are incomplete and cannot establish fraud or the true number of people in need.</p>
+        <div id="claims-list" class="list-scroll">Loading reported village figures…</div>
+        <p id="claims-result" class="result" role="status"></p></div>
+    </section>
 
-            <header class="topbar">
-                <div>
-                    <h1 id="page-title">Emergency Dashboard</h1>
-                    <p>AI-powered crisis management platform</p>
-                </div>
+    <section class="page" id="priority">
+      <div class="panel"><span class="eyebrow">HUMAN-SUPERVISED TRIAGE FLAGS</span><h2>🚑 PriorityGuard</h2>
+        <p>Reported danger is flagged for rapid human assessment. This system does not diagnose, decide clinical urgency, or dispatch emergency services.</p>
+        <div id="priority-list" class="list-scroll">Loading provisional queue…</div>
+        <p id="priority-result" class="result" role="status"></p></div>
+    </section>
 
-                <div class="profile">
-                    <div class="avatar">BN</div>
-                    <div>
-                        <strong>Admin</strong>
-                        <small>Operations Team</small>
-                    </div>
-                </div>
-            </header>
-
-            <!-- DASHBOARD PAGE -->
-            <section class="page active" id="dashboard">
-
-                <div class="welcome">
-                    <div>
-                        <h2>Welcome to BellaNova 👋</h2>
-                        <p>Smarter response. Faster assistance. Safer communities.</p>
-                    </div>
-                    <span class="live">● LIVE MONITORING</span>
-                </div>
-<!-- INTERACTIVE EMERGENCY MAP -->
-
-<div class="map-panel">
-
-    <div class="map-heading">
-        <div>
-            <h3>🗺️ Live Emergency Map</h3>
-            <p>Monitor emergency locations and response teams</p>
-        </div>
-
-        <span class="map-status">● DEMO LIVE</span>
+    <div class="panel demo-controls">
+      <div><h3>🧪 Reproducible Judge Demo</h3><p class="muted">Reset restores all fictional records, 18 food packs, one unreviewed duplicate, a suspicious village claim, two rescue boats and 12 seeded demo-confirmed outcomes. Current simulated records are backed up locally first.</p></div>
+      <button class="secondary-btn" id="demo-reset">Reset fictional challenge</button>
     </div>
 
-    <div id="emergency-map"></div>
-
-    <div class="map-legend">
-        <span><i class="dot red"></i> SOS Emergency</span>
-        <span><i class="dot green"></i> Available Responder</span>
-        <span><i class="dot yellow"></i> SilentZone</span>
-    </div>
-
+    <footer>© 2026 Team BellaNova | LifeCrisis AI — Rule-based emergency simulation</footer>
+  </main>
 </div>
-                <h3>Emergency Overview</h3>
-
-                <div class="stats-grid">
-
-                    <div class="stat-card">
-                        <span>🚨</span>
-                        <p>Total SOS Requests</p>
-                        <h2 id="total-sos">0</h2>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>🟢</span>
-                        <p>Active Responders</p>
-                        <h2>24</h2>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>📦</span>
-                        <p>Available Resources</p>
-                        <h2>156</h2>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>✓</span>
-                        <p>Resolved Requests</p>
-                        <h2 id="resolved">0</h2>
-                    </div>
-
-                </div>
-
-                <div class="content-grid">
-
-                    <div class="panel">
-                        <h3>Quick Actions</h3>
-
-                        <button class="action-btn" data-open="sos">
-                            🚨 Create SOS Request
-                        </button>
-
-                        <button class="action-btn" data-open="resources">
-                            📦 View Resources
-                        </button>
-
-                        <button class="action-btn" data-open="silentzone">
-                            ◉ Check SilentZone
-                        </button>
-                    </div>
-
-                    <div class="panel">
-                        <h3>System Status</h3>
-
-                        <div class="status-row">
-                            <span>Emergency Monitoring</span>
-                            <span class="green">Operational</span>
-                        </div>
-
-                        <div class="status-row">
-                            <span>Resource Management</span>
-                            <span class="green">Operational</span>
-                        </div>
-
-                        <div class="status-row">
-                            <span>AI Response Engine</span>
-                            <span class="green">Operational</span>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="panel">
-                    <h3>Recent Emergency Requests</h3>
-
-                    <div id="recent-requests">
-                        <p class="empty">No emergency requests submitted yet.</p>
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- SOS PAGE -->
-            <section class="page" id="sos">
-
-                <div class="panel">
-                    <h2>Create Emergency SOS</h2>
-                    <p>Submit an emergency request for assistance.</p>
-
-                    <form id="sos-form">
-
-                        <label>Full Name</label>
-                        <input type="text" id="person-name"
-                            placeholder="Enter your name" required>
-
-                        <label>Emergency Type</label>
-                        <select id="emergency-type" required>
-                            <option value="">Select emergency</option>
-                            <option>Medical Emergency</option>
-                            <option>Food and Water</option>
-                            <option>Natural Disaster</option>
-                            <option>Rescue Assistance</option>
-                            <option>Other</option>
-                        </select>
-
-                        <label>Emergency Location</label>
-
-<div class="location-box">
-
-    <input
-        type="text"
-        id="location"
-        placeholder="Enter your location or use GPS"
-        required
-    >
-
-    <button type="button" id="gps-btn">
-        📍 Use My Current Location
-    </button>
-
-</div>
-
-<p id="gps-status"></p>
-
-                        <label>Emergency Description</label>
-                        <textarea id="description"
-                            placeholder="Describe the emergency..."
-                            required></textarea>
-
-                        <button type="submit" class="primary-btn">
-                            Submit SOS Request
-                        </button>
-
-                    </form>
-
-                    <div id="form-message"></div>
-                </div>
-
-            </section>
-
-            <!-- SILENTZONE PAGE -->
-            <section class="page" id="silentzone">
-
-                <div class="panel">
-                    <h2>◉ SilentZone Monitoring</h2>
-                    <p>Identify areas where emergency communication or information is missing.</p>
-
-                    <div class="feature-card">
-                        <h3>Communication Gap Detection</h3>
-                        <p>Monitor areas with missing emergency updates.</p>
-                        <span class="yellow">Monitoring Required</span>
-                    </div>
-
-                    <button class="primary-btn" id="scan-btn">
-                        Scan Communication Gaps
-                    </button>
-
-                    <p id="scan-result"></p>
-                </div>
-
-            </section>
-
-            <!-- RESOURCE HUB PAGE -->
-            <section class="page" id="resources">
-
-                <div class="panel">
-                    <h2>📦 Resource Hub</h2>
-                    <p>Overview of emergency resources available.</p>
-
-                    <div class="resource-grid">
-
-                        <div class="resource-card">
-                            <h3>🍱 Food Supplies</h3>
-                            <h2>50</h2>
-                            <p>Available units</p>
-                        </div>
-
-                        <div class="resource-card">
-                            <h3>💧 Water Supplies</h3>
-                            <h2>60</h2>
-                            <p>Available units</p>
-                        </div>
-
-                        <div class="resource-card">
-                            <h3>🏥 Medical Kits</h3>
-                            <h2>26</h2>
-                            <p>Available units</p>
-                        </div>
-
-                        <div class="resource-card">
-                            <h3>🚑 Rescue Teams</h3>
-                            <h2>20</h2>
-                            <p>Available teams</p>
-                        </div>
-
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- FAILURESHIFT PAGE -->
-            <section class="page" id="failureshift">
-
-                <div class="panel">
-                    <h2>↗ FailureShift</h2>
-
-                    <p>Suggest alternative response options when the original emergency plan fails.</p>
-
-                    <div class="feature-card">
-                        <h3>AI Alternative Planning</h3>
-                        <p>When a resource or responder becomes unavailable, the system can propose another option.</p>
-                        <span class="green">Alternative Planning Ready</span>
-                    </div>
-
-                    <button class="primary-btn" id="alternative-btn">
-                        Generate Alternative
-                    </button>
-
-                    <p id="alternative-result"></p>
-                </div>
-
-            </section>
-
-            <!-- PROOFLOOP PAGE -->
-            <section class="page" id="proofloop">
-
-                <div class="panel">
-                    <h2>✓ ProofLoop</h2>
-
-                    <p>Track emergency assistance and confirm successful delivery.</p>
-
-                    <div class="feature-card">
-                        <h3>Delivery Verification</h3>
-                        <p>Monitor whether emergency assistance has reached the intended recipient.</p>
-                        <span class="green">Tracking Interface Ready</span>
-                    </div>
-
-                    <button class="primary-btn" id="proof-btn">
-                        Confirm Demo Delivery
-                    </button>
-
-                    <p id="proof-result"></p>
-                </div>
-
-            </section>
-
-            <footer>
-                <p>© 2026 BellaNova | LifeCrisis AI | Team A</p>
-            </footer>
-
-        </main>
-
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js" defer></script>
+<script src="hurdle-ui.js" defer></script>
 </body>
 </html>
