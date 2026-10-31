@@ -1,0 +1,20 @@
+﻿<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0c1626"><title>BellaNova | Human Coordinator</title><link rel="stylesheet" href="/live-ui.css?v=1"></head>
+<body data-role="coordinator"><div class="layout"><aside class="sidebar"><div class="identity"><div class="brandmark">✦</div><div><strong>BellaNova</strong><small>LIFECRISIS AI</small></div></div><div class="role-label"><span class="pulse"></span> HUMAN COORDINATOR</div><nav id="nav"><button class="nav active" data-go="overview">▦ <span>Live Overview (Dashboard)</span></button><button class="nav" data-go="priority">⚑ <span>Priority Queue</span></button><button class="nav" data-go="approval">✓ <span>Assignment & Approval</span></button><button class="nav" data-go="closure">◈ <span>ProofLoop Closure</span></button><button class="nav" data-go="silentzone">◎ <span>SilentZone</span></button><button class="nav" data-go="fairshare">⚖ <span>FairShare</span></button><button class="nav" data-go="stock">▤ <span>Resource Stock</span></button></nav><div class="sidebar-foot">PRIVATE NETWORK DEMO<br><span id="connect-state">Connecting…</span><p>Coordinator actions require localhost.</p></div></aside><main class="content"><header class="top"><div><p class="eyebrow">BELLA NOVA / HUMAN SUPERVISION</p><h1 id="page-title">Live Overview</h1><p class="muted">One shared server · Simple yes/no decisions</p></div><div class="profile">COORDINATOR <span class="avatar">BN</span></div></header><div id="flash" role="status" class="flash" hidden></div>
+<section class="view show" data-view="overview"><div class="section-heading"><div><h2>Live emergency overview</h2><p class="muted">Identical shared totals on both laptops</p></div><span class="live-chip">● LIVE</span></div><div id="stats" class="stats"></div></section>
+<section class="view" data-view="priority"><div class="section-heading"><div><h2>Priority Queue</h2><p class="muted">Select priority → Confirm Priority. No mandatory reason.</p></div></div><div id="priority-list" class="cards"></div></section>
+<section class="view" data-view="approval"><div class="section-heading"><div><h2>Assignment & Approval</h2><p class="muted">Choose compatible help and an available trained team. Then YES or NO.</p></div></div><div id="approval-list" class="cards"></div></section>
+<section class="view" data-view="closure"><div class="section-heading"><div><h2>ProofLoop Closure</h2><p class="muted">Has the affected person received the assigned help? Human attestation only.</p></div></div><div id="closure-list" class="cards"></div><div class="panel compact"><h3>Resolved Cases</h3><div id="resolved-list" class="cards"></div></div></section>
+<section class="view" data-view="silentzone"><div class="section-heading"><div><h2>SilentZone</h2><p class="muted">Assign trained teams to physically check a no-contact area (simulation).</p></div></div><div id="silentzone-content"></div></section>
+<section class="view" data-view="fairshare"><div class="section-heading"><div><h2>FairShare</h2><p class="muted">One shared allocation plan, synchronized with SOS Sender.</p></div></div><div id="fairshare-content"></div></section>
+<section class="view" data-view="stock">
+<h2>Resource Stock</h2>
+<p class="muted">Available simulation resources</p>
+<div class="stats">
+<div class="stat"><div class="stat-label">Food</div><strong class="stat-value">55</strong></div>
+<div class="stat"><div class="stat-label">Water</div><strong class="stat-value">155</strong></div>
+<div class="stat"><div class="stat-label">Shelter Areas</div><strong class="stat-value">37</strong></div>
+<div class="stat"><div class="stat-label">Rescue Trainers</div><strong class="stat-value">187</strong></div>
+</div>
+</section>
+<footer>SIMULATION / RESEARCH PROTOTYPE · Not an operational emergency service</footer></main></div><script src="/live-ui.js?v=1" defer></script></body></html>
+

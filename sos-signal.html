@@ -1,0 +1,90 @@
+﻿<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0c1626"><title>BellaNova | SOS Sender</title><link rel="stylesheet" href="/live-ui.css?v=1"></head>
+<body data-role="sos"><div class="layout"><aside class="sidebar"><div class="identity"><div class="brandmark">✦</div><div><strong>BellaNova</strong><small>LIFECRISIS AI</small></div></div><div class="role-label"><span class="pulse"></span> SOS SENDER · SIMULATION</div><nav id="nav"><button class="nav active" data-go="overview">▦ <span>Live Overview (Dashboard)</span></button><button class="nav" data-go="requests">◉ <span>SOS Requests</span></button><button class="nav" data-go="fairshare">⚖ <span>FairShare</span></button><button class="nav" data-go="silentzone">◎ <span>SilentZone</span></button></nav><div class="sidebar-foot">PRIVATE NETWORK DEMO<br><span id="connect-state">Connecting…</span><p>No SOS reaches real responders.</p></div></aside><main class="content"><header class="top"><div><p class="eyebrow">BELLA NOVA / EMERGENCY ASSISTANCE</p><h1 id="page-title">Live Overview</h1><p class="muted">One shared server · Human-supervised fictional response</p></div><div class="profile">SOS PORTAL <span class="avatar">SOS</span></div></header><div id="flash" role="status" class="flash" hidden></div>
+<section class="view show" data-view="overview"><div class="section-heading"><div><h2>Live emergency overview</h2><p class="muted">Identical shared totals on both laptops</p></div><span class="live-chip">● LIVE</span></div><div id="stats" class="stats"></div>
+<style>
+#relief-donations{margin-top:20px;padding:22px;background:#14263c;border:1px solid #38506a;border-radius:15px;color:#e9f3ff;display:grid;grid-template-columns:1fr 200px;gap:20px}
+#relief-donations h3{margin:0 0 8px;font-size:23px}
+#relief-donations p{color:#b9ccde;font-size:13px}
+#relief-donations .amounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:370px}
+#relief-donations .amounts button{padding:13px;border:1px solid #3b5672;border-radius:8px;color:white;background:#1c334d;font-size:16px;cursor:pointer}
+#relief-donations .amounts button.active{background:#13645d;border-color:#35dcc3}
+#relief-donations .qrbox{background:#eef2f7;border-radius:10px;width:165px;height:165px;display:flex;justify-content:center;align-items:center;padding:10px;color:#334155;text-align:center;font-size:12px}
+#relief-donations .qrbox img{width:100%;height:100%;object-fit:contain}
+#relief-donations input{max-width:190px;font-size:11px}
+#relief-donations .upload{display:block;margin-top:10px;font-size:12px}
+#relief-donations .upload button{padding:8px;margin-top:6px;background:#35ccbb;border:0;border-radius:6px;cursor:pointer}
+#relief-donations small{color:#a9bdce}
+@media(max-width:770px){#relief-donations{grid-template-columns:1fr}}
+</style>
+
+<section id="relief-donations">
+ <div>
+  <h3>&#10084;&#65039; Support Disaster Relief</h3>
+  <p>Voluntarily help families affected by emergencies.</p>
+  <strong>Suggested donation amount</strong>
+  <div class="amounts">
+   <button type="button" data-amount="100">&#8377;100</button>
+   <button type="button" data-amount="200">&#8377;200</button>
+   <button type="button" data-amount="500">&#8377;500</button>
+   <button type="button" data-amount="1000">&#8377;1000</button>
+  </div>
+  <p id="donate-selected">Scan the QR using your payment app to donate.</p>
+  <small>Confirm the charity/recipient in your payment app. BellaNova does not process or verify payments.</small>
+ </div>
+ <div>
+  <div class="qrbox">
+   <img id="donation-qr" alt="Donation QR" hidden>
+   <span id="qr-placeholder">Upload a verified charity's PNG QR</span>
+  </div>
+  <strong>Scan to Donate</strong>
+  <div class="upload" id="donation-host" hidden>
+   <input id="donation-file" type="file" accept="image/png,.png">
+   <button id="donation-upload" type="button">UPLOAD QR</button>
+   <p id="donation-message"></p>
+  </div>
+ </div>
+</section>
+
+<script>
+(()=>{
+const qr=document.getElementById('donation-qr');
+const hint=document.getElementById('qr-placeholder');
+function load(){
+ qr.onload=()=>{qr.hidden=false;hint.hidden=true};
+ qr.onerror=()=>{qr.hidden=true;hint.hidden=false};
+ qr.src='/donation-qr.png?t='+Date.now()
+}
+load();
+document.querySelectorAll('#relief-donations [data-amount]').forEach(b=>
+ b.onclick=()=>{
+  document.querySelectorAll('#relief-donations [data-amount]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('donate-selected').textContent='Suggested amount: '+String.fromCharCode(8377)+b.dataset.amount+'. Enter this in your payment app.'
+ }
+);
+if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+ document.getElementById('donation-host').hidden=false;
+ document.getElementById('donation-upload').onclick=async()=>{
+  const f=document.getElementById('donation-file').files[0];
+  const out=document.getElementById('donation-message');
+  if(!f||f.type!=='image/png'||f.size>1048576){
+   out.textContent='Choose a PNG QR under 1 MB';return
+  }
+  try{
+   const r=await fetch('/api/donation/qr',{
+    method:'POST',headers:{'Content-Type':'image/png'},body:f
+   });
+   const j=await r.json();
+   if(!r.ok||!j.success)throw Error(j.message||'Upload failed');
+   out.textContent='QR uploaded for SOS visitors';
+   load()
+  }catch(e){out.textContent=e.message}
+ }
+}
+})();
+</script></section>
+<section class="view" data-view="requests"><div class="section-heading"><div><h2>Send an SOS</h2><p class="muted">Submit fictional emergency information for coordinator review</p></div></div><div class="columns"><div class="panel"><form id="sos-form"><label for="person">Affected person's name *</label><input id="person" maxlength="100" required placeholder="Name"><label for="area">Area / Village *</label><input id="area" maxlength="120" required placeholder="Village or community"><label for="place">Location *</label><div class="location"><input id="place" maxlength="200" required placeholder="Enter location manually"><button type="button" class="secondary" id="gps-btn">Use My GPS Location</button></div><p class="hint" id="gps-hint">GPS may require HTTPS; manual location always works.</p><label for="help">Type of help *</label><select id="help" required><option value="">Select required help</option><option>Food / Water</option><option>Rescue Operation</option><option>Medicine</option><option>Shelter</option><option>Other</option></select><label for="description">Emergency description <span class="muted">(optional)</span></label><textarea id="description" maxlength="500" rows="3" placeholder="Optional details"></textarea><button class="primary full" id="submit-sos" type="submit">SEND SOS</button></form></div><div class="panel"><h3>Request history</h3><p class="muted">Updates when the coordinator confirms priority, help or resolution.</p><div id="sos-list" class="cards"></div></div></div></section>
+<section class="view" data-view="fairshare"><div class="section-heading"><div><h2>FairShare</h2><p class="muted">Live shared food/water allocations · view only</p></div></div><div id="fairshare-content"></div></section>
+<section class="view" data-view="silentzone"><div class="section-heading"><div><h2>SilentZone</h2><p class="muted">Field-check status for areas without communication</p></div></div><div id="silentzone-content"></div></section>
+<footer>SIMULATION / RESEARCH PROTOTYPE · Not an operational emergency service</footer></main></div><script src="/live-ui.js?v=2" defer></script></body></html>
+

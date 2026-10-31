@@ -6,8 +6,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "check": "node --check index.js && node --check app.js && node --check hurdle-ui.js && node --check sw.js && node --check services/hurdle.js",
-    "test": "node --test tests/*.test.js"
+    "check": "node --check index.js && node --check services/live.js && node --check live-ui.js && node --check services/hurdle.js",
+    "test": "node --test tests/live-two-laptops.test.js",
+    "start:lan": "node index.js"
   },
   "dependencies": {
     "express": "^5.3.0"

@@ -10,16 +10,53 @@ const PORT = Number(process.env.PORT || 3001);
 const DB_PATH = process.env.LIFECRISIS_DB_PATH ? path.resolve(process.env.LIFECRISIS_DB_PATH) : path.join(__dirname, "data", "db.json");
 
 app.use(express.json({ limit: "20kb" }));
+// In this two-laptop private-LAN demo, only the host computer may perform coordinator writes.
+// The teammate's computer can submit SOS, but cannot approve/resolve/change FairShare.
+function isHost(req) { return ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket?.remoteAddress); }
+app.use((req,res,next)=>{
+  if(req.method !== "GET" && req.path.startsWith("/api/") && req.path !== "/api/live/sos" && !isHost(req)) {
+    return res.status(403).json({success:false,message:"Coordinator changes must be made on the server laptop using localhost."});
+  }
+  next();
+});
+app.use("/api/",(req,res,next)=>{res.setHeader("Cache-Control","no-store");next();});
+
 // Serve ONLY these frontend files. Do not expose index.js, data/db.json or .env.
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-for (const name of ["index.html", "style.css", "app.js", "hurdle-ui.js", "sw.js"]) {
-  app.get(`/${name}`, (req, res) => res.sendFile(path.join(__dirname, name)));
+app.get("/", (req, res) => res.redirect(302,"/sos-signal.html"));
+for (const name of ["style.css", "app.js", "hurdle-ui.js", "sw.js", "sos-signal.html", "coordinator.html", "live-ui.js", "live-ui.css"]) {
+  app.get(`/${name}`, (req, res) => {res.setHeader("Cache-Control","no-store");res.sendFile(path.join(__dirname, name));});
 }
+app.get("/index.html",(req,res)=>res.redirect(302,"/sos-signal.html"));
+
+
+
+// SOS-ONLY DONATION QR
+app.get('/donation-qr.png',(req,res)=>{
+ const f=path.join(__dirname,'donation-qr.png');
+ res.setHeader('Cache-Control','no-store');
+ if(!fs.existsSync(f))return res.status(404).end();
+ res.type('png').sendFile(f)
+});
+app.post('/api/donation/qr',express.raw({type:'image/png',limit:'1mb'}),(req,res)=>{
+ if(!isHost(req))return res.status(403).json({success:false,message:'Host-only upload'});
+ const b=req.body,sig=Buffer.from([137,80,78,71,13,10,26,10]);
+ if(!Buffer.isBuffer(b)||b.length<50||b.length>1048576||!b.subarray(0,8).equals(sig))
+  return res.status(400).json({success:false,message:'Upload a valid PNG under 1 MB'});
+ try{
+  const f=path.join(__dirname,'donation-qr.png');
+  fs.writeFileSync(f+'.pending',b);
+  fs.renameSync(f+'.pending',f);
+  res.json({success:true})
+ }catch(e){
+  res.status(500).json({success:false,message:'Unable to save QR'})
+ }
+});
 
 // First run: initialize a fictional demo DB only when there is no existing data.
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 if (!fs.existsSync(DB_PATH)) {
-  fs.copyFileSync(path.join(__dirname, "data", "seed.json"), DB_PATH);
+  // Manual SOS entry only; preserve original 60% sample separately in seed.json.
+  fs.copyFileSync(path.join(__dirname, "data", "initial.json"), DB_PATH);
 }
 function readDB() {
   const db = JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
@@ -29,8 +66,14 @@ function readDB() {
   return db;
 }
 
+let currentRevision = 0;
+const liveListeners = new Set();
 function saveDB(db) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+  const tmp = DB_PATH + ".pending";
+  fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
+  fs.renameSync(tmp, DB_PATH);
+  currentRevision++;
+  for (const listener of liveListeners) { try { listener.write(`event: changed\ndata: ${currentRevision}\n\n`); } catch { liveListeners.delete(listener); } }
 }
 
 function logEvent(db, action, details) {
@@ -440,6 +483,10 @@ app.post("/api/demo/reset",safe((req,res)=>{
   res.json({success:true,simulation:true,message:"Fictional challenge restored. Previous DB backed up locally."});
 }));
 
-app.listen(PORT, "127.0.0.1", () => {
+require("./services/live").mount(app, { readDB, saveDB, logEvent, safe, liveListeners, getRevision:()=>currentRevision });
+app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
   console.log(`LifeCrisis AI demo server running on http://localhost:${PORT}`);
+  console.log(`Teammate SOS: http://YOUR_PRIVATE_IPV4:${PORT}/sos-signal.html`);
+  console.log("Coordinator: http://localhost:3001/coordinator.html");
+  console.log("SIMULATION ONLY. Trusted private LAN. Host-only coordinator actions; do not port-forward.");
 });
